@@ -17,8 +17,10 @@ Behind the scenes, this script does some pretty cool stuff --at least I think so
 6) Done.
 
 ### Getting started
-1) The dependencies in this project were versioned using poetry. To launch the notebook, you'll only need to run:
+1) The dependencies in this project were versioned using poetry. Unfortunately, to get LightGBM to utilize the GPU, you'll need to locally build the package. Fortunately this can be done by running the ```setup``` script in this directory.
+2) Next you'll need to run ```poetry install``` to install all the library dependencies.
+3) To launch the notebook, you'll only need to run:
 ```poetry install && poetry run jupyer lab```
-2) The script expects a running MLFlow server. By default, we're running a docker image for our MLFlow server, which can be accessed at ```postgresql://mlflow:mlflow@localhost:5432/mlflow``` and its corresponding artifact store is a directory on the host machine: ```/media/ryan/aloha/mlflow```
-3) The raw data (ie the comptetion csv file) should be accessible from this directory. I've added a local symlink directory called data, which mounts all the comptetion data.
-4) Both boost models use the GPU. They can still be run using CPU, but it'll be painfully slow.
+4) The script expects a running MLFlow server. By default, we're running a docker image for our MLFlow server, which can be accessed at ```postgresql://mlflow:mlflow@localhost:5432/mlflow``` and its corresponding artifact store is a directory on the host machine: ```/media/ryan/aloha/mlflow```
+5) The raw data (ie the comptetion csv file) should be accessible from this directory. I've added a local symlink directory called data, which mounts all the comptetion data.
+6) Both boost models use the GPU. They can still be run using CPU, but it'll be painfully slow.

@@ -1,5 +1,6 @@
-import pickle
+import gc
 import os
+import pickle
 
 import hyperopt
 from hyperopt import fmin, tpe
@@ -17,7 +18,6 @@ class ModelBuilder():
     """
     Trains an LGBM or XGBM model using hyperopt library and publishes the model to an MLFlow library.
     This library also includes a helper functions for selecting the best n hyperparameter configs.
-    
     """
     
     MLFLOW_URI='postgresql://mlflow:mlflow@localhost:5432/mlflow'
@@ -73,11 +73,13 @@ class ModelBuilder():
         """
         
         if self.model_type.lower()=='xgbmodel':
-            model = LGBModel(args)
+            model = XGBModel(args)
         elif self.model_type.lower()=='lgbmodel':
             model = LGBModel(args)
         else:
             raise Exception('model_type must be either "XGBModel" or "LGBModel"')
+        
+        print(model)
 
         mlflow.set_tracking_uri(os.getenv("MLFLOW_DATABASE_URI"))
         experiment_id,run_id = self.init_mlflow_run()
@@ -101,18 +103,18 @@ class ModelBuilder():
             X,y = HDFLoader().dump_data('train')
 
             # Generate stratified split
-            
-            cv_attempts = 3
             auc_scores = []
-            skfold = model_selection.StratifiedKFold(n_splits=3,shuffle=False)
+            skfold = model_selection.StratifiedShuffleSplit(n_splits=2,test_size=0.2)
             for train_ix,val_ix in skfold.split(X,y):
+                
                 X_train,y_train = X[train_ix],y[train_ix].ravel()
                 X_val,y_val = X[val_ix], y[val_ix].ravel()
-                    
+                
                 model.fit(X_train,y_train)
 
                 y_pred = model.predict(X_val)
                 auc_score = metrics.roc_auc_score(y_val,y_pred)
+                
                 auc_scores.append(auc_score)
 
             combined_auc_score = np.mean(auc_scores)
@@ -129,7 +131,7 @@ class ModelBuilder():
         return -1.0 * combined_auc_score
     
     
-    def get_best_models(self, experiment_name, top_n=1):
+    def get_best_models(self, experiment_name, model_type, top_n=1):
         """
         Returns a list of dictionaries for top_n models
         
@@ -140,7 +142,15 @@ class ModelBuilder():
         returns: 
             list(dict) -> {'score':<auc_score>, 'path':<model_path>}
         """
+        
+        if model_type=='xgbmodel':
+            model_name = 'model.xgb'
+        elif model_type=='lgbmodel':
+            model_name = 'model.lgb'
+        else:
+            raise Exception('model_type must be either "xgbmodel" or "lgbmodel"')
 
+        mlflow.set_tracking_uri(self.MLFLOW_URI)
         client = mlflow.tracking.client.MlflowClient()
         experiment_id = client.get_experiment_by_name(experiment_name).experiment_id
         
@@ -154,7 +164,7 @@ class ModelBuilder():
         
         results = [(v.data.metrics['auc'],v.info.run_id) for v in results if 'auc' in v.data.metrics]
         
-        path_builder = lambda run_id: os.path.join(self.ARTIFACT_STORE,experiment_id,run_id,'artifacts',self.MODEL_NAME)
+        path_builder = lambda run_id: os.path.join(self.ARTIFACT_STORE,experiment_id,run_id,'artifacts',model_name)
 
         return [{'score':score,'path':path_builder(run_id)} for score,run_id in results]
     

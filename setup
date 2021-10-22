@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Bash script for setting up GPU enabled LightGBM library
+
+#nvidia_driver_id=470
+#sudo apt-get install --no-install-recommends libnvidia-compute-$nvidia_driver_id nvidia-opencl-dev opencl-headers
+
+git clone --recursive https://github.com/microsoft/LightGBM
+cd LightGBM
+git pull
+mkdir -p build
+cd build
+cmake -DUSE_GPU=1 ..
+make -j$(nproc)
+cd ../..
+COMPILEDLGBM_PATH="LightGBM/python-package/dist"
+COMPILEDLGBM_FILENAME=$(ls $COMPILEDLGBM_PATH | grep .whl | sort -r  | head -n 1)
+poetry add $COMPILEDLGBM_PATH/$COMPILEDLGBM_FILENAME

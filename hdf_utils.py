@@ -71,7 +71,6 @@ class HDFLoader():
         return X_total,y_total
     
     
-    
 def HDFDatasetBuilder(
         source_filepath='data/train.csv',
         output_filepath='data.hdf5',
@@ -105,6 +104,9 @@ def HDFDatasetBuilder(
     
     # Split out target from features in training and test sets 
     train_X, test_X = data
+    train_X = train_X.reset_index(drop=True)
+    test_X = test_X.reset_index(drop=True)
+    
     train_y = train_X.pop(target_column_name)
     test_y = test_X.pop(target_column_name)
     train_sample_cnt, test_sample_cnt = train_X.shape[0], test_X.shape[0]
@@ -114,14 +116,14 @@ def HDFDatasetBuilder(
     
         microbatch_count = train_sample_cnt//desired_batchsize #*expected_workers
         for i in range(microbatch_count):
-            tmp_x = train_X.iloc[i*microbatch_count:i*microbatch_count+desired_batchsize,:]
-            tmp_y = train_y.iloc[i*microbatch_count:i*microbatch_count+desired_batchsize]
+            tmp_x = train_X.iloc[i*desired_batchsize:(i+1)*desired_batchsize,:]
+            tmp_y = train_y.iloc[i*desired_batchsize:(i+1)*desired_batchsize]
             f.append(f'train{str(i)}data', tmp_x)
             f.append(f'train{str(i)}target',tmp_y)
 
         microbatch_count = test_sample_cnt//desired_batchsize #*expected_workers
         for i in range(microbatch_count):
-            tmp_x = test_X.iloc[i*microbatch_count:i*microbatch_count+desired_batchsize,:]
-            tmp_y = test_y.iloc[i*microbatch_count:i*microbatch_count+desired_batchsize]
+            tmp_x = test_X.iloc[i*desired_batchsize:(i+1)*desired_batchsize,:]
+            tmp_y = test_y.iloc[i*desired_batchsize:(i+1)*desired_batchsize]
             f.append(f'test{str(i)}data', tmp_x)
             f.append(f'test{str(i)}target',tmp_y)

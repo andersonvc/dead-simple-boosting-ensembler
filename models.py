@@ -32,16 +32,17 @@ class LGBModel(object):
             'max_depth':-1,
             'learning_rate':0.1,
             'n_estimators':1000,
-            'objective':'regression',
+            'objective':'binary',
             'reg_alpha':0.,
             'reg_lambda':0.,
             'subsample':1.,
+            'device':'gpu',
             'random_state':datetime.datetime.now().microsecond,
         }
         
         self.params = {**default_params,**args}
         print(self.params)
-        self.model = lightgbm.LGBMRegressor()
+        self.model = lightgbm.LGBMRegressor(**self.params)
                 
     def save(self,directory,use_mlflow=True):
         fullpath = os.path.join(directory,self.model_name)
@@ -58,7 +59,9 @@ class LGBModel(object):
         return self.model.predict(X)
     
     def fit(self,X,y):
+        self.model.random_state = datetime.datetime.now().microsecond
         self.model.fit(X,y,eval_metric=['auc'])
+    
 
         
 class XGBModel(object):
@@ -80,7 +83,7 @@ class XGBModel(object):
         self.params = {**default_params,**args}
         self.model = xgb.XGBRegressor(**self.params)
 
-    def save(self,directory,use_mflow=True):
+    def save(self,directory,use_mlflow=True):
         fullpath = os.path.join(directory,self.model_name)
         if use_mlflow:
             mlflow.xgboost.save_model(self.model, fullpath)
@@ -95,5 +98,5 @@ class XGBModel(object):
         return self.model.predict(X)
     
     def fit(self,X,y):
-        print('starting fit')
+        self.model.seed = datetime.datetime.now().microsecond
         self.model.fit(X,y,eval_metric=['auc'])
