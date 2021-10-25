@@ -4,6 +4,15 @@ import lightgbm
 import xgboost as xgb
 import os
 
+def convert_str_to_num(var:str):
+    if var.isnumeric():
+        return int(var)    
+    try:
+        return float(var)
+    except:
+        return var
+
+
 class Model(object):
     def __init__(self,args):
         pass
@@ -51,17 +60,20 @@ class LGBModel(object):
         else:
             self.model.booster_.save_model(fullpath)
 
-    def load(self,directory):
+    def load(self,directory,params=None):
         fullpath = os.path.join(directory, self.model_name)
         self.model = lightgbm.Booster(model_file=fullpath)
+        if params:
+            self.params = {k:convert_str_to_num(v) for k,v in params.items()}
 
     def predict(self,X):
         return self.model.predict(X)
     
     def fit(self,X,y):
-        self.model.random_state = datetime.datetime.now().microsecond
+        self.params['random_state'] = datetime.datetime.now().microsecond
+        self.model = lightgbm.LGBMRegressor(**self.params)
+        print(self.params)
         self.model.fit(X,y,eval_metric=['auc'])
-    
 
         
 class XGBModel(object):
@@ -90,13 +102,17 @@ class XGBModel(object):
         else:
             self.model.save_model(fullpath)
 
-    def load(self,directory):
+    def load(self,directory,params=None):
         fullpath = os.path.join(directory, self.model_name)
         self.model.load_model(fullpath)
+        if params:
+            self.params = {k:convert_str_to_num(v) for k,v in params.items()}
 
     def predict(self,X):
         return self.model.predict(X)
     
     def fit(self,X,y):
-        self.model.seed = datetime.datetime.now().microsecond
+        self.params['seed'] = datetime.datetime.now().microsecond
+        self.model = xgb.XGBRegressor(**self.params)
+        print(self.params)
         self.model.fit(X,y,eval_metric=['auc'])

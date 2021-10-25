@@ -162,11 +162,11 @@ class ModelBuilder():
           order_by=["metrics.auc DESC"]
         )
         
-        results = [(v.data.metrics['auc'],v.info.run_id) for v in results if 'auc' in v.data.metrics]
+        results = [(v.data.metrics['auc'],v.info.run_id,v.data.params) for v in results if 'auc' in v.data.metrics]
         
         path_builder = lambda run_id: os.path.join(self.ARTIFACT_STORE,experiment_id,run_id,'artifacts',model_name)
 
-        return [{'score':score,'path':path_builder(run_id)} for score,run_id in results]
+        return [{'score':score,'path':path_builder(run_id),'params':params} for score,run_id,params in results]
     
     
     def run(self,experiment_name, model_type, hyperopt_space):
