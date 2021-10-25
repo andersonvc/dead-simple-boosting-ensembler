@@ -50,7 +50,6 @@ class LGBModel(object):
         }
         
         self.params = {**default_params,**args}
-        print(self.params)
         self.model = lightgbm.LGBMRegressor(**self.params)
                 
     def save(self,directory,use_mlflow=True):
@@ -72,7 +71,6 @@ class LGBModel(object):
     def fit(self,X,y):
         self.params['random_state'] = datetime.datetime.now().microsecond
         self.model = lightgbm.LGBMRegressor(**self.params)
-        print(self.params)
         self.model.fit(X,y,eval_metric=['auc'])
 
         
@@ -114,5 +112,4 @@ class XGBModel(object):
     def fit(self,X,y):
         self.params['seed'] = datetime.datetime.now().microsecond
         self.model = xgb.XGBRegressor(**self.params)
-        print(self.params)
         self.model.fit(X,y,eval_metric=['auc'])
