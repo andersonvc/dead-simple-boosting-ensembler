@@ -200,6 +200,7 @@ class ModelBuilder():
             algo=tpe.suggest,
             max_evals=trial_cnt,
             trials=trials,
+            verbose=0,
         )
 
         # save the trials object
