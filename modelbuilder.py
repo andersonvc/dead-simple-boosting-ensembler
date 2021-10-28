@@ -11,7 +11,7 @@ import numpy as np
 from sklearn import metrics,model_selection
 
 from models import LGBModel,XGBModel
-from hdf_utils import HDFDatasetBuilder,HDFLoader
+from hdf_utils import HDFBuilder,HDFLoader
 
 
 class ModelBuilder():
@@ -22,11 +22,10 @@ class ModelBuilder():
     
     MLFLOW_URI='postgresql://mlflow:mlflow@localhost:5432/mlflow'
     ARTIFACT_STORE='/media/ryan/aloha/mlflow'
-    SOURCE_DATA='./data.hdf5'
     
     
-    def __init__(self): 
-        pass
+    def __init__(self,source_data='data.hdf5'): 
+        self.SOURCE_DATA=source_data
     
     
     def init_mlflow_run(self):
@@ -100,7 +99,7 @@ class ModelBuilder():
                 mlflow.log_param(k, v)
         
             # load data from disk
-            X,y = HDFLoader().dump_data('train')
+            X,y = HDFLoader(datapath=self.SOURCE_DATA).dump_data('train')
 
             # Generate stratified split
             auc_scores = []
